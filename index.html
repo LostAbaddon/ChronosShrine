@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>克罗诺斯的神龛</title>
+<script src="vue.js"></script>
+<link href="calendar.css" rel="stylesheet">
+</head>
+<body>
+<input id="uploader" type="file" accept=".json">
+<div module="calendar">
+	<div class="chronosShrine" :show="showChronos">
+		<div class="closer" @click="showChronos=false">X</div>
+		<div class="yearLine" v-for="year in chronos">
+			<div class="title">{{year.year}}</div>
+			<div class="info">{{year.done}} / {{year.total}}</div>
+			<div class="bar">
+				<div class="bg" :style="{width: year.done / year.total * 100 + '%', opacity: year.total > 0 ? 1 : 0}"></div>
+				<div class="monthBar">
+					<div class="monthItem" v-for="(month, index) in year.month">
+						<div class="bg total" :style="{height: month.total / year.max * 60 + '%', opacity: month.total > 0 ? 1 : 0}"></div>
+						<div class="bg done" :style="{height: month.done / year.max * 60 + '%', opacity: month.total > 0 ? 1 : 0}"></div>
+						<div class="legend">{{index + 1}}</div>
+						<div class="info">{{month.done}} / {{month.total}}</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="timeUsage" :show="showTimeUsage">
+		<div class="closer" @click="showTimeUsage=false">X</div>
+		<div class="title">网页用时</div>
+		<div class="usageBar">
+			<div class="usageLine" v-for="item in usage">
+				<div class="bar" :style="{width: item.percent + '%'}">&nbsp;&nbsp;{{item.url}} ( {{item.time}} | {{Math.round(item.percent)}}% )</div>
+			</div>
+		</div>
+	</div>
+	<div class="titleBar">
+		<span class="button hover" @click="openChronos()">展示年历</span>
+		<span class="button hover second" @click="showUsage()">时间跟踪</span>
+		<span class="button left prev year" @click="moveDate(-1, 0)">&lt;&lt;</span>
+		<span class="button left prev month" @click="moveDate(0, -1)">&lt;</span>
+		<span class="title">{{year}}-{{month}}</span>
+		<span class="button right next month" @click="moveDate(0, 1)">&gt;</span>
+		<span class="button right next year" @click="moveDate(1, 0)">&gt;&gt;</span>
+	</div>
+	<div class="header">
+		<span class="item">一</span>
+		<span class="item">二</span>
+		<span class="item">三</span>
+		<span class="item">四</span>
+		<span class="item">五</span>
+		<span class="item">六</span>
+		<span class="item">日</span>
+		<span class="item">%</span>
+	</div>
+	<div class="weekLine" v-for="(w, i) in rows">
+		<div class="bg" :style="{width:w.percent+'%'}"></div>
+		<span v-for="d in w.data" class="item" :today="d.today" :disabled="d.disabled" @click="showTasks(0, year, month, d.name)">
+			<span class="title">{{d.name}}</span>
+			<span class="info">{{d.count}} / {{d.total}}</span>
+			<span class="bg" :style="{height:d.percent+'%'}"></span>
+		</span>
+		<span class="item score week" @click="showTasks(1, year, month, i)">{{w.count}} / {{w.total}}</span>
+	</div>
+	<div class="scorePad">
+		<div class="circle month" @click="showTasks(2, year, month)">
+			<div class="left">
+				<div class="halfcircle" :style="{transform:'rotate('+(monthly.degree<180?0:monthly.degree+180)+'deg) translateX(100%)'}"></div>
+			</div>
+			<div class="right">
+				<div class="halfcircle" :style="{transform:'rotate('+(monthly.degree>180?180:monthly.degree)+'deg) translateX(-100%)'}"></div>
+			</div>
+			<div class="title">月度</div>
+			<div class="info">{{monthly.count}} / {{monthly.total}}</div>
+		</div>
+		<div class="circle year" @click="showTasks(3, year)">
+			<div class="left">
+				<div class="halfcircle" :style="{transform:'rotate('+(yearly.degree<180?0:yearly.degree+180)+'deg) translateX(100%)'}"></div>
+			</div>
+			<div class="right">
+				<div class="halfcircle" :style="{transform:'rotate('+(yearly.degree>180?180:yearly.degree)+'deg) translateX(-100%)'}"></div>
+			</div>
+			<div class="title">年度</div>
+			<div class="info">{{yearly.count}} / {{yearly.total}}</div>
+		</div>
+		<div class="circle life" @click="showTasks(4)">
+			<div class="left">
+				<div class="halfcircle" :style="{transform:'rotate('+(lifely.degree<180?0:lifely.degree+180)+'deg) translateX(100%)'}"></div>
+			</div>
+			<div class="right">
+				<div class="halfcircle" :style="{transform:'rotate('+(lifely.degree>180?180:lifely.degree)+'deg) translateX(-100%)'}"></div>
+			</div>
+			<div class="title">命度</div>
+			<div class="info">{{lifely.count}} / {{lifely.total}}</div>
+		</div>
+	</div>
+	<div class="unfinished">
+		<div class="title">待完成计划</div>
+		<div class="list">
+			<span class="empt" v-if="notdone.life.length+notdone.year.length+notdone.month.length+notdone.week.length+notdone.day.length===0">无</span>
+			<div class="itemTitle" v-if="notdone.day.length>0">日度计划</div>
+			<div class="itemLine" v-for="item in notdone.day" @click="showTasks(0, item.year, item.month, item.day)">{{item.year}}-{{item.month}}-{{item.day}}：{{item.event}} （{{item.score}} 分）</div>
+			<div class="itemTitle" v-if="notdone.week.length>0">周度计划</div>
+			<div class="itemLine" v-for="item in notdone.week" @click="showTasks(1, item.year, item.month, item.wd)">{{item.year}}-{{item.month}}：{{item.event}} （{{item.score}} 分）</div>
+			<div class="itemTitle" v-if="notdone.month.length>0">月度计划</div>
+			<div class="itemLine" v-for="item in notdone.month" @click="showTasks(2, item.year, item.month)">{{item.year}}-{{item.month}}：{{item.event}} （{{item.score}} 分）</div>
+			<div class="itemTitle" v-if="notdone.year.length>0">年度计划</div>
+			<div class="itemLine" v-for="item in notdone.year" @click="showTasks(3, item.year)">{{item.year}}年：{{item.event}} （{{item.score}} 分）</div>
+			<div class="itemTitle" v-if="notdone.life.length>0">命度计划</div>
+			<div class="itemLine" v-for="item in notdone.life" @click="showTasks(4)">{{item.event}} （{{item.score}} 分）</div>
+		</div>
+	</div>
+	<div class="port">
+		<div class="button" @click="exports()">导出</div>
+		<div class="button" @click="imports()">导入</div>
+	</div>
+</div>
+<div module="infoPad">
+	<div class="frame">
+		<div class="closer" @click="closePad()">X</div>
+		<div class="title" :style="{color:'rgb('+(255-202/100*percent)+',53,53)'}">{{title}} | 完成度：{{percent}}% （{{count}} / {{total}}）</div>
+		<div class="taskList">
+			<div class="taskItem" v-for="t in list" :tid="t.id" @click="change(t.id)">
+				<div class="controller">
+					<span class="button" @click="append(t.id)">追加</span>
+					<span class="button" @click="modify(t.id)">修改</span>
+					<span class="button" @click="remove(t.id)">删除</span>
+				</div>
+				<input type="checkbox" :checked="t.done">
+				<label>{{t.event}} ({{t.score}} 分)</label>
+				<div class="appendix" v-if="!!t.appendix && t.appendix.length > 0">
+					<div class="appendixLine" v-for="line in t.appendix">{{line}}</div>
+				</div>
+			</div>
+		</div>
+		<div class="subTasks">子任务完成度： {{subsCount}} / {{subsTotal}}</div>
+		<div class="addNew">
+			<div class="line">任务：	<input type="text" name="task"></div>
+			<div class="line">分值：	<input type="number" name="score" value=1 @change="changeScore()"></div>
+			<div class="line"><button @click="addNew()">{{modifier===null?'添加':'修改'}}任务</button></div>
+		</div>
+		<div class="appendInfo" v-if="showAppend">
+			<textarea>{{appendix}}</textarea>
+			<div class="line"><button @click="addAppendix()">添加附录</button></div>
+		</div>
+	</div>
+</div>
+<script src="index.js"></script>
+</body>
+</html>

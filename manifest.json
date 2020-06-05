@@ -1,0 +1,26 @@
+{
+	"name": "时间神龛",
+	"version": "1.0.0",
+	"author": "LostAbaddon",
+	"homepage_url": "https://github.com/LostAbaddon/ChronosShrine",
+	"manifest_version": 2,
+	"description": "时间管理小工具",
+	"permissions": [ "notifications", "idle", "tabs", "<all_urls>" ],
+	"content_security_policy": "script-src 'self' 'unsafe-eval' blob: filesystem:; object-src 'self'",
+	"icons": {
+		"128": "index.png"
+	},
+	"background": {
+		"scripts": [
+			"common.js",
+			"LRUcache.js",
+			"cacheStorage.js",
+			"cacheDB.js",
+			"backend.js"
+		]
+	},
+	"browser_action": {
+		"default_title": "时间神龛",
+		"default_icon": "index.png"
+	}
+}
