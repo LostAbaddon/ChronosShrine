@@ -57,7 +57,7 @@
 	</div>
 	<div class="weekLine" v-for="(w, i) in rows">
 		<div class="bg" :style="{width:w.percent+'%'}"></div>
-		<span v-for="d in w.data" class="item" :today="d.today" :disabled="d.disabled" @click="showTasks(0, year, month, d.name)">
+		<span v-for="d in w.data" class="item" :today="d.today" :selected="d.selected" :disabled="d.disabled" @click="showTasks(0, year, month, d.name, d)">
 			<span class="title">{{d.name}}</span>
 			<span class="info">{{d.count}} / {{d.total}}</span>
 			<span class="bg" :style="{height:d.percent+'%'}"></span>

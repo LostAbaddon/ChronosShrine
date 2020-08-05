@@ -412,7 +412,7 @@
 						if (item.done) info.count += item.score;
 						else if (item.score >= 0) t ++;
 					}
-					if (t === 0) w.count ++;
+					if (t === 0 && !!w) w.count ++;
 				});
 				for (let d in tWeek) {
 					sWeek.push(tWeek[d]);

@@ -84,15 +84,26 @@
 	root.getWeeksInMonth = (year, month) => {
 		var day = 1;
 		var result = [root.toMonday(year, month, day)];
-		for (let i = 0; i < 3; i ++) {
+		var limit = MonthDays[month];
+		if (month === 2 && isLeap(year)) limit ++;
+		while (true) {
 			day += 7;
-			result.push(root.toMonday(year, month, day));
-		}
-		day = MonthDays[month];
-		if (month === 2 && isLeap(year)) day ++;
-		var temp = root.toMonday(year, month, day);
-		if (temp[2] !== result[3][2]) {
+			let m = month;
+			let y = year;
+			let jump = false;
+			if (day > limit) {
+				m ++;
+				day -= limit;
+				jump = true;
+				if (m > 12) {
+					y ++;
+					m -= 12;
+				}
+			}
+			let temp = root.toMonday(y, m, day);
+			if (temp[1] !== month) break;
 			result.push(temp);
+			if (jump) break;
 		}
 		return result;
 	};

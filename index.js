@@ -275,6 +275,7 @@ const info = {
 	appendix: '',
 	aid: ''
 };
+var lastSelectedDay = false;
 
 const vCal = new Vue({
 	el: 'div[module="calendar"]',
@@ -359,6 +360,7 @@ const vCal = new Vue({
 					percent: item.total === 0 ? 0 : item.count / item.total * 100,
 					total: item.total,
 					count: item.count,
+					selected: false,
 					today: isToday && d.getDate() === cd
 				});
 				last += DayLong;
@@ -384,6 +386,7 @@ const vCal = new Vue({
 						percent: item.total === 0 ? 0 : item.count / item.total * 100,
 						total: item.total,
 						count: item.count,
+						selected: false,
 						today: !disabled && isToday && d.getDate() === cd
 					});
 					last += DayLong;
@@ -438,7 +441,7 @@ const vCal = new Vue({
 				chrome.browserAction.setBadgeText({ text: count });
 			}
 		},
-		showTasks: async (type, year, month, other) => {
+		showTasks: async (type, year, month, other, target) => {
 			// 0: daily; 1: weekly; 2: monthly; 3: yearly; 4: lifely; 5: schedule
 
 			var title, origin = other;
@@ -474,7 +477,14 @@ const vCal = new Vue({
 			else if (type === 3) info.type = 'yearly';
 			else if (type === 2) info.type = 'monthly';
 			else if (type === 1) info.type = 'weekly';
-			else info.type = 'daily';
+			else {
+				info.type = 'daily';
+				if (!!lastSelectedDay) lastSelectedDay.selected = false;
+				if (!!target) {
+					target.selected = true;
+					lastSelectedDay = target;
+				}
+			}
 			info.index = type;
 			info.year = year;
 			info.month = month;
